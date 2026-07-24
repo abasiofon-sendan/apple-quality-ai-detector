@@ -19,7 +19,6 @@ import sys
 # ==========================
 
 REQUIRED_PACKAGES = [
-    "tensorflow==2.21.0",
     "numpy",
     "pandas",
     "opencv-python",
@@ -32,6 +31,7 @@ REQUIRED_PACKAGES = [
     "streamlit",
     "requests",
     "python-dotenv",
+    "tensorflow==2.21.0"
 ]
 
 # ==========================
