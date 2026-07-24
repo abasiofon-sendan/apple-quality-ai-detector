@@ -3,17 +3,23 @@ Project Bootstrap Installer
 Apple Formalin Detection System
 
 This script:
-1. Verifies Python version
-2. Upgrades pip
-3. Installs required project packages
-4. Verifies installation
+1. Checks Python version
+2. Installs project dependencies
+3. Verifies installation
+4. Prints next setup steps
+
+Author: Project Team
 """
 
 import subprocess
 import sys
 
+# ==========================
+# REQUIRED PROJECT PACKAGES
+# ==========================
+
 REQUIRED_PACKAGES = [
-    "tensorflow",
+    "tensorflow==2.21.0",
     "numpy",
     "pandas",
     "opencv-python",
@@ -25,41 +31,39 @@ REQUIRED_PACKAGES = [
     "python-multipart",
     "streamlit",
     "requests",
-    "python-dotenv"
+    "python-dotenv",
 ]
+
+# ==========================
 
 
 def run(command):
-    """Run a shell command."""
     subprocess.check_call(command)
 
 
 def install(package):
-    """Install a package."""
     print(f"Installing {package}...")
-    run([sys.executable, "-m", "pip", "install", package])
+    run([sys.executable, "-m", "pip", "install", "--no-cache-dir", package])
 
 
 def verify(package):
-    """Verify package installation."""
-    module = package.replace("-", "_")
 
-    # Common import name differences
     aliases = {
-        "Pillow": "PIL",
         "opencv-python": "cv2",
+        "Pillow": "PIL",
         "scikit-learn": "sklearn",
         "python-dotenv": "dotenv",
         "python-multipart": "multipart",
     }
 
-    module = aliases.get(package, module) or module
+    module = package.split("==")[0]
+    module = aliases.get(module, module.replace("-", "_"))
 
     try:
         __import__(module)
-        print(f"✓ {package}")
+        print(f"✓ {module}")
     except ImportError:
-        print(f"✗ {package}")
+        print(f"✗ {module}")
 
 
 def main():
@@ -68,11 +72,10 @@ def main():
     print("Apple Formalin Detection Project Installer")
     print("=" * 60)
 
-    print("\nUpgrading pip...\n")
+    print(f"\nPython Version : {sys.version.split()[0]}")
+    print("Using existing pip installation.\n")
 
-    run([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
-
-    print("\nInstalling packages...\n")
+    print("Installing project packages...\n")
 
     for package in REQUIRED_PACKAGES:
         install(package)
@@ -82,9 +85,10 @@ def main():
     for package in REQUIRED_PACKAGES:
         verify(package)
 
-    print("\nInstallation Complete!")
-    print("Next:")
-    print("    pip freeze > requirements.txt")
+    print("\nInstallation Complete.")
+    print("\nNext Commands:")
+    print("pip freeze > requirements.txt")
+    print("python -c \"import tensorflow as tf; print(tf.__version__)\"")
 
 
 if __name__ == "__main__":
