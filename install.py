@@ -57,7 +57,7 @@ def verify(package):
     }
 
     module = package.split("==")[0]
-    module = aliases.get(module, module.replace("-", "_"))
+    module = aliases.get(module, module.replace("-", "_")) or module
 
     try:
         __import__(module)
