@@ -1,0 +1,14 @@
+{
+    "class_names": [
+        "Formalin-mixed",
+        "Fresh"
+    ],
+    "num_classes": 2,
+    "image_height": 224,
+    "image_width": 224,
+    "batch_size": 64,
+    "label_mode": "binary",
+    "training_dataset": "/kaggle/working/Apple_Quality_Binary/train",
+    "validation_dataset": "/kaggle/working/Apple_Quality_Binary/val",
+    "testing_dataset": "/kaggle/working/Apple_Quality_Binary/test"
+}

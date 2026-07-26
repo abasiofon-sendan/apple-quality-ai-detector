@@ -1,0 +1,6 @@
+{
+    "validation_loss": 0.050517451018095016,
+    "validation_accuracy": 0.9810126423835754,
+    "validation_precision": 0.9912023544311523,
+    "validation_recall": 0.9825581312179565
+}

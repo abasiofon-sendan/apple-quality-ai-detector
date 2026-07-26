@@ -1,0 +1,11 @@
+{
+    "model_name": "Custom CNN",
+    "validation_loss": 0.050517451018095016,
+    "validation_accuracy": 0.9810126423835754,
+    "validation_precision": 0.9912023544311523,
+    "validation_recall": 0.9825581312179565,
+    "test_loss": 0.04928334802389145,
+    "test_accuracy": 0.9842436909675598,
+    "test_precision": 0.9970545172691345,
+    "test_recall": 0.9811594486236572
+}
