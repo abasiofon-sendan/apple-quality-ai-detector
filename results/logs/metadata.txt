@@ -1,0 +1,8 @@
+Apple Quality AI Detector
+=========================
+
+Image Size: (224, 224)
+Classes: ['Formalin-mixed', 'Fresh']
+Prediction Threshold: 0.5
+Model Architecture: Fine-Tuned MobileNetV3Small
+Framework: TensorFlow Keras
