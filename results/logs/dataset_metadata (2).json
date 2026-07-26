@@ -1,0 +1,30 @@
+{
+    "class_names": [
+        "Formalin-mixed",
+        "Fresh"
+    ],
+    "num_classes": 2,
+    "image_height": 224,
+    "image_width": 224,
+    "batch_size": 64,
+    "label_mode": "binary",
+    "training_dataset": "/kaggle/working/Apple_Quality_Binary/train",
+    "validation_dataset": "/kaggle/working/Apple_Quality_Binary/val",
+    "testing_dataset": "/kaggle/working/Apple_Quality_Binary/test",
+    "transfer_learning": {
+        "validation_loss": 0.33795616030693054,
+        "validation_accuracy": 0.844936728477478,
+        "validation_precision": 0.8960468769073486,
+        "validation_recall": 0.8895348906517029
+    },
+    "fine_tuning": {
+        "validation_loss": 0.31050387024879456,
+        "validation_accuracy": 0.8713080286979675,
+        "validation_precision": 0.9274924397468567,
+        "validation_recall": 0.8924418687820435,
+        "test_accuracy": 0.8792016806722689,
+        "test_precision": 0.9375951293759512,
+        "test_recall": 0.8927536231884058,
+        "test_f1_score": 0.9146250927988122
+    }
+}
