@@ -15,9 +15,7 @@ The full workflow — dataset acquisition, cleaning, exploratory data analysis, 
 - [SENDAN, ABASIOFON UDUAK	23/EG/CO/087] – 
 - [	JACK, BARISERE LEKARA	23/EG/CO/047] – 
 - [	MICHAEL SAMUEL	23/EG/CO/127] – 
-- [	UBOM, MKPOIKANAWASI PAUL	23/EG/CO/067] –
-- [	UDO, MFONISO EMMANUEL	24/EG/CO/387] – 
-- [	WILSON, ISREAL OKON	23/EG/CO/017] –   
+- [	UDO, MFONISO EMMANUEL	24/EG/CO/387] –   
 
 ## Project Objectives
 
