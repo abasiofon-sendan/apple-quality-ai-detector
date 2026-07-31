@@ -16,7 +16,7 @@ The full workflow — dataset acquisition, cleaning, exploratory data analysis, 
 - [	JACK, BARISERE LEKARA	23/EG/CO/047] – 
 - [	MICHAEL SAMUEL	23/EG/CO/127] – 
 - [	UDO, MFONISO EMMANUEL	24/EG/CO/387] –   
-
+- .[WILSON, ISREAL OKON 23/EG/CO/017].- 
 ## Project Objectives
 
 - Source and merge apple images from multiple public datasets to build a larger, more diverse training set.
