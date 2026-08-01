@@ -16,6 +16,7 @@ assets/
 data/
 reports/
 results/
+pyproject.toml/
 develop-eggs/
 dist/
 downloads/

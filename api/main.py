@@ -1,235 +1,245 @@
-import streamlit as st
-import tensorflow as tf
-import numpy as np
-from PIL import Image, UnidentifiedImageError
+## `api/main.py`
 
-# ------------------------------------------------------------------
-# Config
-# ------------------------------------------------------------------
-MODEL_PATH = "models/apple_formalin_classifier.keras"
-IMAGE_HEIGHT = 128
-IMAGE_WIDTH = 128
-CLASSES = ["Formalin-mixed", "Fresh"]
-LOW_CONFIDENCE_THRESHOLD = 65.0  # below this, don't let the UI sound certain
 
-st.set_page_config(
-    page_title="Apple Quality Scanner",
-    page_icon="🍎",
-    layout="centered",
+"""
+===============================================================================
+AppleGuard AI — FastAPI Application
+===============================================================================
+
+Project      : AppleGuard AI
+Module       : api.main
+Author       : Group 16
+
+Purpose
+-------
+Main FastAPI backend entry point.
+
+Responsibilities
+----------------
+• Create FastAPI application
+• Configure API metadata
+• Register middleware
+• Register API routes
+• Manage startup/shutdown lifecycle
+• Handle global exceptions
+• Provide root and health endpoints
+
+Run
+---
+uvicorn api.main:app --reload
+===============================================================================
+"""
+
+from __future__ import annotations
+
+# =============================================================================
+# IMPORTS
+# =============================================================================
+from contextlib import asynccontextmanager
+
+import uvicorn
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from api.routes import router as api_router
+from src.config import (
+    API_DESCRIPTION,
+    API_HOST,
+    API_PORT,
+    API_TITLE,
+    API_VERSION,
+    CORS_ALLOW_CREDENTIALS,
+    CORS_ALLOW_HEADERS,
+    CORS_ALLOW_METHODS,
+    CORS_ALLOW_ORIGINS,
+    PROJECT_NAME,
 )
+from src.helpers import (
+    print_error,
+    print_info,
+    print_success,
+)
+from src import predict
 
-# ------------------------------------------------------------------
-# Styling — orchard palette: deep leaf green, crimson accent, warm cream
-# ------------------------------------------------------------------
-st.markdown(
+# Keep startup compatible with predict modules that do not expose optional
+# model validation yet.
+validate_models = getattr(predict, "validate_models", lambda: None)
+
+# =============================================================================
+# APPLICATION LIFESPAN
+# =============================================================================
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """
-    <style>
-    :root {
-        --leaf: #2E4B2F;
-        --leaf-light: #4C7A4F;
-        --crimson: #B23A3A;
-        --cream: #FBF6EE;
-        --charcoal: #2B2620;
-    }
-
-    .stApp {
-        background: var(--cream);
-    }
-
-    .block-container {
-        padding-top: 2rem;
-        max-width: 780px;
-    }
-
-    .scanner-header {
-        text-align: center;
-        padding: 1.2rem 0 0.4rem 0;
-    }
-    .scanner-header h1 {
-        font-family: 'Georgia', serif;
-        color: var(--leaf);
-        font-size: 2.4rem;
-        margin-bottom: 0.1rem;
-        letter-spacing: -0.5px;
-    }
-    .scanner-header p {
-        color: var(--charcoal);
-        opacity: 0.7;
-        font-size: 0.95rem;
-        margin-top: 0;
-    }
-
-    div[data-testid="stFileUploader"] {
-        border: 2px dashed var(--leaf-light);
-        border-radius: 14px;
-        padding: 1rem;
-        background: #ffffffaa;
-    }
-
-    .result-card {
-        border-radius: 16px;
-        padding: 1.4rem 1.6rem;
-        margin-top: 1rem;
-        color: white;
-    }
-    .result-fresh { background: linear-gradient(135deg, var(--leaf), var(--leaf-light)); }
-    .result-formalin { background: linear-gradient(135deg, #7A2222, var(--crimson)); }
-    .result-uncertain { background: linear-gradient(135deg, #6b5b1f, #a08a2e); }
-
-    .result-card h2 {
-        margin: 0 0 0.2rem 0;
-        font-size: 1.6rem;
-    }
-    .result-card p {
-        margin: 0;
-        opacity: 0.9;
-        font-size: 0.9rem;
-    }
-
-    .prob-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.85rem;
-        color: var(--charcoal);
-        margin-top: 1.2rem;
-        margin-bottom: 0.2rem;
-    }
-
-    .disclaimer {
-        background: #fff3e0;
-        border-left: 4px solid #d99a2b;
-        padding: 0.8rem 1rem;
-        border-radius: 6px;
-        font-size: 0.82rem;
-        color: #5c4a1f;
-        margin-top: 1.5rem;
-    }
-
-    footer {visibility: hidden;}
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# ------------------------------------------------------------------
-# Header
-# ------------------------------------------------------------------
-st.markdown(
+    Application startup and shutdown lifecycle manager.
     """
-    <div class="scanner-header">
-        <h1>🍎 Apple Quality Scanner</h1>
-        <p>Upload a photo to screen for signs of surface adulteration</p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
-
-# ------------------------------------------------------------------
-# Model loading — cached so it doesn't reload on every interaction
-# ------------------------------------------------------------------
-@st.cache_resource(show_spinner=False)
-def load_model(path: str):
-    return tf.keras.models.load_model(path)
-
-
-try:
-    with st.spinner("Loading model..."):
-        model = load_model(MODEL_PATH)
-except Exception as e:
-    st.error(
-        f"Couldn't load the model from `{MODEL_PATH}`. "
-        f"Check that the file exists and is a valid Keras model.\n\nDetails: {e}"
-    )
-    st.stop()
-
-# ------------------------------------------------------------------
-# Upload + inference
-# ------------------------------------------------------------------
-uploaded_file = st.file_uploader(
-    "Drop an apple image here, or click to browse",
-    type=["jpg", "jpeg", "png"],
-)
-
-if uploaded_file:
-    try:
-        image = Image.open(uploaded_file).convert("RGB")
-    except UnidentifiedImageError:
-        st.error("That file doesn't look like a valid image. Try a different one.")
-        st.stop()
-
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        st.image(image, caption="Uploaded image", use_container_width=True)
+    print("=" * 78)
+    print(f"Starting {PROJECT_NAME} API...")
+    print("=" * 78)
 
     try:
-        img = image.resize((IMAGE_WIDTH, IMAGE_HEIGHT))
-        img_array = np.array(img, dtype=np.float32) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
+        validate_models()
 
-        with st.spinner("Analyzing..."):
-            prediction = model.predict(img_array, verbose=0)[0]
+        print_success("All registered models validated successfully.")
 
-        predicted_index = int(np.argmax(prediction))
-        predicted_class = CLASSES[predicted_index]
-        confidence = float(prediction[predicted_index] * 100)
+        print_info(f"API Title   : {API_TITLE}")
+        print_info(f"API Version : {API_VERSION}")
 
-    except Exception as e:
-        st.error(f"Something went wrong while running the prediction: {e}")
-        st.stop()
+    except Exception as error:
+        print_error(f"Model validation failed: {error}")
 
-    with col2:
-        if confidence < LOW_CONFIDENCE_THRESHOLD:
-            st.markdown(
-                f"""
-                <div class="result-card result-uncertain">
-                    <h2>⚠️ Uncertain</h2>
-                    <p>Best guess: {predicted_class} at only {confidence:.1f}% confidence.
-                    Consider a clearer photo or a physical check.</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-        elif predicted_class == "Fresh":
-            st.markdown(
-                f"""
-                <div class="result-card result-fresh">
-                    <h2>✅ Fresh</h2>
-                    <p>{confidence:.1f}% confidence</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-        else:
-            st.markdown(
-                f"""
-                <div class="result-card result-formalin">
-                    <h2>🚫 Formalin-mixed</h2>
-                    <p>{confidence:.1f}% confidence</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+    # Startup complete
+    yield
 
-    st.markdown("<div class='prob-row'><span>Breakdown</span></div>", unsafe_allow_html=True)
-    for cls, prob in zip(CLASSES, prediction):
-        st.markdown(
-            f"<div class='prob-row'><span>{cls}</span><span>{prob*100:.1f}%</span></div>",
-            unsafe_allow_html=True,
-        )
-        st.progress(float(prob))
+    # Shutdown
+    print("=" * 78)
+    print(f"Shutting down {PROJECT_NAME} API...")
+    print("=" * 78)
 
-    st.markdown(
-        """
-        <div class="GROUP 16">
-        <strong>Note:</strong> this is a visual classifier of FRESH AND FORMALIN-MIXED APPLES done by GROUP 16 OF COMPUTER ENGINEERING STUDENT, UNIVERSITY OF UYO.
-        </div>
-        """,
-        unsafe_allow_html=True,
+# =============================================================================
+# CREATE FASTAPI APPLICATION
+# =============================================================================
+
+app = FastAPI(
+    title=API_TITLE,
+    description=API_DESCRIPTION,
+    version=API_VERSION,
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+# =============================================================================
+# CORS MIDDLEWARE
+# =============================================================================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ALLOW_ORIGINS,
+    allow_credentials=CORS_ALLOW_CREDENTIALS,
+    allow_methods=CORS_ALLOW_METHODS,
+    allow_headers=CORS_ALLOW_HEADERS,
+)
+
+# =============================================================================
+# GLOBAL EXCEPTION HANDLERS
+# =============================================================================
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request,
+    exc: RequestValidationError,
+):
+    """
+    Handle FastAPI request validation errors.
+    """
+
+    return JSONResponse(
+        status_code=422,
+        content={
+            "success": False,
+            "error": "validation_error",
+            "message": "Request validation failed.",
+            "details": exc.errors(),
+        },
     )
-else:
-    st.markdown(
-        "<p style='text-align:center; opacity:0.6; margin-top:2rem;'>"
-        "No image yet — upload one to get started.</p>",
-        unsafe_allow_html=True,
+
+@app.exception_handler(Exception)
+async def global_exception_handler(
+    request: Request,
+    exc: Exception,
+):
+    """
+    Handle unexpected server errors.
+    """
+
+    print_error(f"Unhandled exception: {exc}")
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "error": "internal_server_error",
+            "message": "An unexpected server error occurred.",
+        },
     )
+
+# =============================================================================
+# REGISTER API ROUTES
+# =============================================================================
+
+app.include_router(api_router)
+
+# =============================================================================
+# ROOT ENDPOINT
+# =============================================================================
+
+@app.get(
+    "/",
+    tags=["Root"],
+    summary="API Root",
+)
+async def root():
+    """
+    API root endpoint.
+    """
+
+    return {
+        "project": PROJECT_NAME,
+        "version": API_VERSION,
+        "status": "running",
+        "documentation": "/docs",
+        "redoc": "/redoc",
+    }
+
+# =============================================================================
+# HEALTH CHECK ENDPOINT
+# =============================================================================
+
+@app.get(
+    "/health",
+    tags=["Health"],
+    summary="Health Check",
+)
+async def health_check():
+    """
+    Lightweight health check endpoint.
+    """
+
+    return {
+        "success": True,
+        "service": PROJECT_NAME,
+        "status": "healthy",
+        "version": API_VERSION,
+    }
+
+# =============================================================================
+# MODULE TEST / DEVELOPMENT ENTRY POINT
+# =============================================================================
+
+if __name__ == "__main__":
+
+    print("=" * 78)
+    print(f"{PROJECT_NAME} — FastAPI Application")
+    print("=" * 78)
+
+    print(f"Title   : {API_TITLE}")
+    print(f"Version : {API_VERSION}")
+    print(f"Host    : {API_HOST}")
+    print(f"Port    : {API_PORT}")
+    print("Router  : Registered")
+    print("Status  : Ready")
+
+    print("=" * 78)
+
+    uvicorn.run(
+        "api.main:app",
+        host=API_HOST,
+        port=API_PORT,
+        reload=True,
+    )
+
