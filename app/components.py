@@ -622,12 +622,13 @@ from src.config import (
     UPLOAD_PLACEHOLDER_PATH,
 )
 
-from api.api_Client import (
-    generate_gradcam,
-    predict_best_model,
+
+
+from src.predict import (
+    compare_models,
+    load_model,
     predict_image,
 )
-from src.predict import compare_models, load_model
 
 from src.gradcam import (
     GradCAM,
@@ -1016,38 +1017,55 @@ def render_report_downloads(report_paths: dict[str, Path]) -> None:
         )
 
 
-def render_prediction_workflow(uploaded_file, model_name: str) -> None:
-    """Run the full prediction workflow through the FastAPI backend."""
+def render_prediction_workflow(
+    uploaded_file,
+    model_name: str,
+    use_backend: bool = True,
+) -> None:
+    """Run the complete AppleGuard prediction workflow."""
 
+    # ------------------------------------------------------------------
+    # Load uploaded image
+    # ------------------------------------------------------------------
+    uploaded_file.seek(0)
     image = Image.open(uploaded_file).convert("RGB")
 
+    # Display preview
     render_image_preview(image)
 
+    # ------------------------------------------------------------------
+    # Run prediction
+    # ------------------------------------------------------------------
     with st.spinner("🧠 Analyzing apple quality..."):
+
         try:
-            # -------------------------------------------------------------
-            # Send image to FastAPI
-            # -------------------------------------------------------------
             uploaded_file.seek(0)
 
-            result = predict_image(uploaded_file, model_name)
+            if use_backend:
+                # FastAPI backend prediction
+                result = predict_image(uploaded_file, model_name)
+            else:
+                # Local prediction fallback
+                from src.predict import predict_image as local_predict_image
 
-            # -------------------------------------------------------------
-            # Normalize API response
-            # -------------------------------------------------------------
+                result = local_predict_image(image, model_name)
+
+            # ----------------------------------------------------------
+            # Normalize prediction result
+            # ----------------------------------------------------------
             prediction_result = {
-                "predicted_class": result.get("prediction", "Unknown"),
+                "predicted_class": result.get("predicted_class", "Unknown"),
                 "confidence": result.get("confidence", 0.0),
-                "confidence_percentage": result.get("confidence_percent", "0.00%"),
+                "confidence_percentage": result.get("confidence_percentage", "0.00%"),
                 "probabilities": result.get("probabilities", {}),
-                "model_name": result.get("model", model_name),
+                "model_name": result.get("model_name", model_name),
                 "prediction_time_seconds": result.get("prediction_time_seconds", 0.0),
                 "is_confident": result.get("is_confident", False),
             }
 
-            # -------------------------------------------------------------
-            # Display prediction
-            # -------------------------------------------------------------
+            # ----------------------------------------------------------
+            # Display prediction results
+            # ----------------------------------------------------------
             st.markdown("---")
             st.header("🧠 Prediction Results")
 
@@ -1059,9 +1077,9 @@ def render_prediction_workflow(uploaded_file, model_name: str) -> None:
             if probabilities:
                 render_probability_section(probabilities)
 
-            # -------------------------------------------------------------
-            # Request Grad-CAM from FastAPI
-            # -------------------------------------------------------------
+            # ----------------------------------------------------------
+            # Generate Grad-CAM visualization
+            # ----------------------------------------------------------
             try:
                 uploaded_file.seek(0)
 
@@ -1075,13 +1093,35 @@ def render_prediction_workflow(uploaded_file, model_name: str) -> None:
             except Exception as error:
                 st.warning(f"Grad-CAM unavailable: {error}")
 
-            # -------------------------------------------------------------
-            # Save to history
-            # -------------------------------------------------------------
-            _append_to_history(uploaded_file.name, prediction_result)
+            # ----------------------------------------------------------
+            # Generate downloadable reports
+            # ----------------------------------------------------------
+            st.markdown("---")
+            st.header("📄 Download Reports")
+
+            report_paths = generate_complete_report(
+                prediction_result=prediction_result,
+                image_name=uploaded_file.name,
+            )
+
+            render_report_downloads(report_paths)
+
+            # ----------------------------------------------------------
+            # Save prediction history
+            # ----------------------------------------------------------
+            _append_to_history(
+                uploaded_file.name,
+                prediction_result,
+            )
+
+            st.success(
+                "✅ Analysis and report generation completed successfully."
+            )
 
         except Exception as error:
             st.error(f"Prediction failed: {error}")
+
+
 # =============================================================================
 # MESSAGE HELPERS
 # =============================================================================

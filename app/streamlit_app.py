@@ -216,9 +216,9 @@ from src.config import (
     SHOW_MODEL_PERFORMANCE,
     SIDEBAR_STATE,
     get_model_metadata,
+    get_available_models,
 )
 
-from api.api_Client import get_available_models
 
 
 
@@ -320,61 +320,84 @@ with st.sidebar:
     # -------------------------------------------------------------------------
         
     # -------------------------------------------------------------------------
+ 
+    # -------------------------------------------------------------------------
     # MODEL SELECTION
     # -------------------------------------------------------------------------
 
     st.subheader("🧠 Model Engine")
 
-    # Fetch model information from FastAPI
-    model_data = get_available_models()
+    # ---------------------------------------------------------------------
+    # Try FastAPI first
+    # ---------------------------------------------------------------------
 
-    # Handle backend offline state
-    if model_data and not model_data[0].get("available", True):
-        st.error(
-            "⚠️ FastAPI backend is not running. "
-            "Start it with: uvicorn api.main:app --reload"
+    backend_available = True
+
+    try:
+        from api.api_Client import get_available_models as fetch_backend_models
+
+        model_data = fetch_backend_models()
+
+        available_models = [
+            model["name"]
+            for model in model_data
+            if model.get("available", False)
+        ]
+
+    except Exception:
+        # -------------------------------------------------------------
+        # FastAPI is not available (Streamlit Cloud fallback)
+        # -------------------------------------------------------------
+        backend_available = False
+
+        from src.config import get_available_models
+
+        available_models = get_available_models()
+
+        st.warning(
+            "⚠️ FastAPI backend not detected. "
+            "Using local prediction engine."
         )
-        st.stop()
 
-    # Extract only available model names
-    available_models = [
-        model["name"]
-        for model in model_data
-        if model.get("available", False)
-    ]
-
+    # ---------------------------------------------------------------------
     # Safety fallback
+    # ---------------------------------------------------------------------
+
     if not available_models:
-        st.error("No AI models are available from the backend.")
+        st.error("No AI models are available.")
         st.stop()
 
+    # ---------------------------------------------------------------------
     # Current session model
+    # ---------------------------------------------------------------------
+
     current_model = st.session_state.get(
         "appleguard_model",
         DEFAULT_MODEL,
     )
 
-    # Reset invalid model names
     if current_model not in available_models:
         current_model = available_models[0]
         st.session_state.appleguard_model = current_model
 
+    # ---------------------------------------------------------------------
     # Human-friendly display names
+    # ---------------------------------------------------------------------
+
     DISPLAY_NAMES = {
-        "custom_cnn": "Custom CNN",
-        "mobilenetv3_feature_extraction": "MobileNetV3 Feature Extraction",
-        "mobilenetv3_fine_tuned": "MobileNetV3 Fine-Tuned",
+        "Custom CNN": "Custom CNN",
+        "Transfer Learning": "Transfer Learning",
+        "Fine-Tuned MobileNetV3": "Fine-Tuned MobileNetV3",
     }
 
     selected_model = st.selectbox(
         "Active model",
         available_models,
         index=available_models.index(current_model),
-        format_func=lambda x: DISPLAY_NAMES.get(x, x),
+        format_func=lambda x: DISPLAY_NAMES.get(x, str(x)),
     )
 
     st.session_state.appleguard_model = selected_model
-
 
     # -------------------------------------------------------------------------
     # MODEL DETAILS
