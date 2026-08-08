@@ -11,15 +11,15 @@ The full workflow — dataset acquisition, cleaning, exploratory data analysis, 
 
 ## Team Members
 
-- [	IKIP, SCIENTIST EGONG	23/EG/CO/027] – 
-- [SENDAN, ABASIOFON UDUAK	23/EG/CO/087] – 
-- [	JACK, BARISERE LEKARA	23/EG/CO/047] – 
-- [	MICHAEL SAMUEL	23/EG/CO/127] – 
-- [	UDO, MFONISO EMMANUEL	24/EG/CO/387] –   
-- [WILSON, ISREAL OKON 23/EG/CO/017] -
-- [Umoren, Joshua Idorenyin 23/EG/CO/037] -
-- [	Aniebiet, Jack Uduak 23/EG/CO/097] –
-- [Etim, Stephen Anthony 23/EG/CO/077] –
+- [	IKIP, SCIENTIST EGONG] 
+- [SENDAN, ABASIOFON UDUAK] 
+- [	JACK, BARISERE LEKARA] 
+- [	MICHAEL SAMUEL] 
+- [	UDO, MFONISO EMMANUEL]   
+- [WILSON, ISREAL OKON]
+- [Umoren, Joshua Idorenyin]
+- [	Aniebiet, Jack Uduak]
+- [Etim, Stephen Anthony]
 ## Project Objectives
 
 - Source and merge apple images from multiple public datasets to build a larger, more diverse training set.
