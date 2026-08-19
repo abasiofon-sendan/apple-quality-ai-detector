@@ -105,8 +105,9 @@ def render_sidebar(available_models, current_model) -> str:
 def render_upload_section():
     """Render the flat upload panel with an optional placeholder image.
 
-    Returns a tuple of (uploaded_file, right_column_container). The right
-    column is returned so the caller can render the prediction result there.
+    The uploaded image preview replaces the placeholder once a file is chosen.
+
+    Returns a tuple of (uploaded_file, left_column_container, right_column_container).
     """
 
     left_col, right_col = st.columns([1, 1], gap="large")
@@ -117,16 +118,21 @@ def render_upload_section():
             unsafe_allow_html=True,
         )
 
-        if UPLOAD_PLACEHOLDER_PATH.exists():
-            st.image(str(UPLOAD_PLACEHOLDER_PATH), use_container_width=True)
-
         uploaded_file = st.file_uploader(
             "Choose an apple image",
             type=["jpg", "jpeg", "png"],
             label_visibility="collapsed",
         )
 
-    return uploaded_file, right_col
+        preview_image = None
+        if uploaded_file is not None:
+            uploaded_file.seek(0)
+            preview_image = Image.open(uploaded_file).convert("RGB")
+            render_image_preview(preview_image, "Uploaded Image")
+        elif UPLOAD_PLACEHOLDER_PATH.exists():
+            st.image(str(UPLOAD_PLACEHOLDER_PATH), use_container_width=True)
+
+    return uploaded_file, left_col, right_col
 
 
 # =============================================================================
@@ -217,9 +223,9 @@ def render_prediction_result(prediction: dict[str, Any]) -> None:
 def render_prediction_workflow(uploaded_file, model_name: str, result_container) -> None:
     """Run the prediction on an uploaded image and render the result.
 
-    Advances the uploaded file pointer to its start, decodes the image,
-    shows a preview in the left column, runs inference (FastAPI backend when
-    reachable, else local engine), and draws the result in the right column.
+    The preview is rendered inside the left panel by ``render_upload_section``.
+    This workflow runs inference (FastAPI backend when reachable, else local
+    engine) and draws the result in the right column.
     """
 
     import traceback

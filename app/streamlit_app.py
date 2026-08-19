@@ -106,7 +106,7 @@ render_app_header()
 # MAIN CONTENT — TWO-COLUMN LAYOUT
 # =============================================================================
 
-uploaded_file, result_col = render_upload_section()
+uploaded_file, left_col, result_col = render_upload_section()
 
 if uploaded_file is not None:
     render_prediction_workflow(uploaded_file, selected_model, result_col)
