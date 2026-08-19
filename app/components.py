@@ -120,7 +120,7 @@ def render_upload_section():
 
         uploaded_file = st.file_uploader(
             "Choose an apple image",
-            type=["jpg", "jpeg", "png"],
+            type=["jpg", "jpeg", "png","webp"],
             label_visibility="collapsed",
         )
 
