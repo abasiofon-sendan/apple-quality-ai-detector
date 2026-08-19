@@ -90,16 +90,12 @@ SIDEBAR_STATE: Final[str] = "expanded"
 # THEME SETTINGS
 # =============================================================================
 
+# Flat UI redesign uses a single fixed neutral-slate theme; theme switching
+# was removed. These constants are retained for backward compatibility.
 DEFAULT_THEME: Final[str] = "Apple Fresh"
+AVAILABLE_THEMES: Final[tuple[str, ...]] = ("Apple Fresh",)
 
-AVAILABLE_THEMES: Final[tuple[str, ...]] = (
-    "Apple Fresh",
-    "Midnight Dark",
-    "Formalin Alert",
-    "Laboratory Blue",
-)
-
-ENABLE_THEME_SWITCHING: Final[bool] = True
+ENABLE_THEME_SWITCHING: Final[bool] = False
 
 
 # =============================================================================
@@ -391,8 +387,8 @@ LAST_CONV_LAYER_NAME: Final[str | None] = None
 # =============================================================================
 
 ENABLE_MODEL_CACHE: Final[bool] = True
-ENABLE_PREDICTION_HISTORY: Final[bool] = True
-ENABLE_MODEL_COMPARISON: Final[bool] = True
+ENABLE_PREDICTION_HISTORY: Final[bool] = False
+ENABLE_MODEL_COMPARISON: Final[bool] = False
 ENABLE_BATCH_PREDICTION: Final[bool] = False
 ENABLE_GPU: Final[bool] = True
 
