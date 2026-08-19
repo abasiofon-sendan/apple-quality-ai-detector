@@ -33,7 +33,7 @@ def render_app_header() -> None:
         """
         <div class="flat-header">
             <div>
-                <div class="flat-header-brand">🍎 AppleGuard AI</div>
+                <div class="flat-header-brand">AppleGuard AI</div>
                 <div class="flat-header-tag">AI-powered apple quality screening</div>
             </div>
             <div style="text-align:right;">
@@ -58,7 +58,7 @@ def render_sidebar(available_models, current_model) -> str:
 
     st.sidebar.markdown(
         """
-        <div class="sidebar-brand">🍎 AppleGuard AI</div>
+        <div class="sidebar-brand">AppleGuard AI</div>
         <div class="sidebar-sub">Quality Screening</div>
         """,
         unsafe_allow_html=True,
@@ -160,12 +160,12 @@ def render_prediction_result(prediction: dict[str, Any]) -> None:
 
     if is_fresh:
         panel_class = "result-fresh"
-        icon = "🍏"
+        icon = ""
         title = "Fresh Apple"
         sub = "The model predicts this apple appears fresh."
     else:
         panel_class = "result-formalin"
-        icon = "🚨"
+        icon = ""
         title = "Formalin-Mixed Apple"
         sub = "Visual patterns associated with potential formalin treatment detected."
 
